@@ -12,18 +12,18 @@ func main() {
 		fmt.Println("wrong input format")
 		os.Exit(1)
 	}
+
 	brokerAddres := os.Args[1]
 	serverType := os.Args[2]
-
 	var input string
 
 	broker, err := net.ResolveTCPAddr("tcp4", brokerAddres)
-	if err != nil {
-		fmt.Println(os.Stderr, "Fatal error: %s", err.Error())
-		os.Exit(1)
-	}
+	checkError(err)
 
-	for i := 1; ; i++ {
+	conn, err := net.DialTCP("tcp", nil, broker)
+	checkError(err)
+
+	for {
 
 		fmt.Scanln(&input)
 		if input == "exit" {
@@ -31,34 +31,36 @@ func main() {
 		}
 
 		if serverType == "sync" {
-			sendMessage(i, broker)
+			sendMessage(conn)
 		}
 		if serverType == "async" {
-			go sendMessage(i, broker)
+			go sendMessage(conn)
 		}
 	}
 	os.Exit(0)
 }
 
-func sendMessage(messageNumber int, broker *net.TCPAddr) {
+func sendMessage(conn net.Conn) {
 	ack := make([]byte, 32)
-	conn, err := net.DialTCP("tcp", nil, broker)
-	if err != nil {
-		fmt.Println("connection error when sending message number %d", messageNumber)
-		return
-	}
 
-	_, err = conn.Write([]byte("message"))
+	_, err := conn.Write([]byte("message"))
 	if err != nil {
-		fmt.Println("connection error when sending message number %d", messageNumber)
+		fmt.Println("connection error during sending message")
 		return
 	}
 
 	_, err = conn.Read(ack)
 	if err != nil {
-		fmt.Println("connection error when sending message number %d", messageNumber)
+		fmt.Println("connection error during sending message")
 		return
 	}
 
-	fmt.Println("ack for '%s' recieved for message numbner %d", string(ack), messageNumber)
+	fmt.Println("ack recieved for message numbner %d", string(ack))
+}
+
+func checkError(err error) {
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
+		os.Exit(1)
+	}
 }

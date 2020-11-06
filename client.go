@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -33,7 +34,7 @@ func main() {
 			continue
 		}
 
-		if string(task) == "close" {
+		if strings.HasPrefix(string(task), "close") {
 			fmt.Println("Client closed!")
 			break
 		}

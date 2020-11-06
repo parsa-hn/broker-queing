@@ -6,7 +6,9 @@ import (
 	"os"
 )
 
-var channel chan string = make(chan string, 10)
+const queueSize int = 10
+
+var channel chan string = make(chan string, queueSize)
 var serverCon net.Conn
 
 func runBroker(conn net.Conn) {
@@ -55,7 +57,11 @@ func readMessage() {
 	for {
 		message := make([]byte, 512)
 		serverCon.Read(message)
-		channel <- string(message)
+		if len(channel) == queueSize {
+			serverCon.Write([]byte("Broker queue is full!"))
+		} else {
+			channel <- string(message)
+		}
 	}
 }
 

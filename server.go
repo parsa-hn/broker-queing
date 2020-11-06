@@ -9,15 +9,15 @@ import (
 func main() {
 
 	if len(os.Args) != 3 {
-		fmt.Println("wrong input format")
+		fmt.Println("Wrong input format")
 		os.Exit(1)
 	}
 
-	brokerAddres := os.Args[1]
+	brokerAddress := os.Args[1]
 	serverType := os.Args[2]
 	var input string
 
-	broker, err := net.ResolveTCPAddr("tcp4", brokerAddres)
+	broker, err := net.ResolveTCPAddr("tcp4", brokerAddress)
 	checkError(err)
 
 	conn, err := net.DialTCP("tcp", nil, broker)
@@ -41,21 +41,24 @@ func main() {
 }
 
 func sendMessage(conn net.Conn) {
-	ack := make([]byte, 32)
+	input := make([]byte, 512)
+	ack := make([]byte, 512)
 
-	_, err := conn.Write([]byte("message"))
+	fmt.Scanln(&input)
+
+	_, err := conn.Write(input)
 	if err != nil {
-		fmt.Println("connection error during sending message")
+		fmt.Println("Connection error during sending message")
 		return
 	}
 
 	_, err = conn.Read(ack)
-	if err != nil {
-		fmt.Println("connection error during sending message")
+	if (err != nil) {
+		fmt.Println("Acknowledge not recived for this message")
 		return
 	}
 
-	fmt.Println("ack recieved for message numbner %d", string(ack))
+	fmt.Println("Ack recieved for message", input)
 }
 
 func checkError(err error) {

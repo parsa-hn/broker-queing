@@ -6,10 +6,6 @@ import (
 	"os"
 )
 
-type Message struct {
-	Content string
-}
-
 var channel chan string = make(chan string, 10)
 var serverCon net.Conn
 
@@ -21,9 +17,9 @@ func runBroker(conn net.Conn) {
 	fmt.Println("Message delivered")
 }
 
-func connectToClient() {
+func connectToClient(clientAddress string) {
 	fmt.Println("Broker is listening for new clients...")
-	service := ":8001"
+	service := clientAddress
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	checkError(err)
 	listener, err := net.ListenTCP("tcp", tcpAddr)
@@ -32,15 +28,15 @@ func connectToClient() {
 	for {
 		conn, err := listener.Accept()
 		if err == nil {
-			fmt.Println("New Client")
+			fmt.Println("New client connected!")
 			go runBroker(conn)
 		}
 	}
 }
 
-func connectToServer() net.Conn {
+func connectToServer(serverAddress string) net.Conn {
 	fmt.Println("Broker is listening for a server...")
-	service := ":8000"
+	service := serverAddress
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	checkError(err)
 	listener, err := net.ListenTCP("tcp", tcpAddr)
@@ -49,6 +45,7 @@ func connectToServer() net.Conn {
 	for {
 		conn, err := listener.Accept()
 		if err == nil {
+			fmt.Println("Server connected!")
 			return conn
 		}
 	}
@@ -70,11 +67,18 @@ func checkError(err error) {
 }
 
 func main() {
-	serverCon = connectToServer()
+	if len(os.Args) != 3 {
+		fmt.Println("Wrong input format")
+		os.Exit(1)
+	}
+	serverAddress := os.Args[1]
+	clientAddress := os.Args[2]
+
+	serverCon = connectToServer(serverAddress)
 
 	go readMessage()
 
-	connectToClient()
+	connectToClient(clientAddress)
 
 	close(channel)
 }

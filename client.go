@@ -11,15 +11,15 @@ import (
 func main() {
 
 	if len(os.Args) != 2 {
-		fmt.Fprintf(os.Stderr, "Usage: %s ip-addr\n", os.Args[0])
+		fmt.Println("Wrong input format")
 		os.Exit(1)
 	}
-	brokerAddres := os.Args[1]
+	brokerAddress := os.Args[1]
 
 	var sleep_delay int
 	task := make([]byte, 512)
 
-	broker, err := net.ResolveTCPAddr("tcp4", brokerAddres)
+	broker, err := net.ResolveTCPAddr("tcp4", brokerAddress)
 	checkError(err)
 	for true {
 		conn, err := net.DialTCP("tcp", nil, broker)
@@ -34,12 +34,12 @@ func main() {
 		}
 
 		if string(task) == "close" {
-			fmt.Println("cleint closed")
+			fmt.Println("Client closed!")
 			break
 		}
 
 		sleep_delay = rand.Intn(10) + 1
-		fmt.Println("message '%s' recieved and now sleeping for %d seconds", string(task), sleep_delay)
+		fmt.Println("Message", string(task), "recieved and now sleeping for", sleep_delay, "seconds")
 		time.Sleep(time.Duration(sleep_delay) * time.Second)
 	}
 	os.Exit(0)
